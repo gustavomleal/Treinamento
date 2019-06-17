@@ -4,18 +4,39 @@ using namespace std;
 #define lef(x) (x<<1)
 #define rig(x) lef(x) + 1
 const int N=1000100;
-pair<int,int> tree[4*N],a[N];
-int lazy[4*N];
-template <typename T,typename U>                                                   
-pair<T,U> operator+(const pair<T,U> & l,const pair<T,U> & r) {   
-    return {l.first+r.first,l.second+r.second};                                    
+
+typedef struct dado{
+	int q,s,qs,sq;
+	dado():q(0),s(0),sq(0),qs(0){}
+	dado(int x):q(x==1),s(x==0),sq(1),qs(1){}
+}Dado;
+
+Dado f(Dado x,Dado y){
+		Dado r;
+		r.qs=max({x.qs+y.s,x.q+y.qs,x.q+y.s});
+		r.sq=max({x.s+y.sq,x.sq+y.q,x.s+y.q});
+		r.q=x.q+y.q;
+		r.s=x.s+y.s;
+		return r;			
+}
+void suap(Dado &x){
+		swap(x.qs,x.sq);
+		swap(x.q,x.s);
 }
 
-void push(int p){
+
+Dado tree[4*N],a[N];
+int lazy[4*N];
+
+void push(int p,int l,int r){
 	if(lazy[p]){
-		swap(tree[lef(p)].ft,tree[lef(p)].sd);
-		swap(tree[rig(p)].ft,tree[rig(p)].sd);
-		lazy[lef(p)]=lazy[rig(p)]=1;
+		int mid=(l+r)/2;
+		suap(tree[lef(p)]);
+		suap(tree[rig(p)]);
+
+		if(l!=mid)lazy[lef(p)]^=1;
+		mid++;
+		if(mid!=r)lazy[rig(p)]^=1;
 		lazy[p]=0;
 	}
 }
@@ -26,43 +47,66 @@ void build(int p,int tl,int tr){
 	if(tl==tr)
 		tree[p]=a[tl];
 	else{
-		int mid=(l+r)/2;
-		build(lef(p),l,mid);
-		build(rig(p),mid+1,r);
-		tree[p]=tree[lef(p)]+tree[rig(p)];
+		int mid=(tl+tr)/2;
+		build(lef(p),tl,mid);
+		build(rig(p),mid+1,tr);
+		tree[p]=f(tree[lef(p)],tree[rig(p)]);
+		// cout<<tl<<" "<<tr<<" "<<tree[p].qs<<" "<<tree[p].sq<<" "<<tree[p].q<<" "<<tree[p].s<<"\n";
 	}
 }
 
 
-int walk(int p,int tl,int tr){
-	if(tl==tr)
-		return 1;
-	if(!tree[lef(p)].sd && !tree[rig(p)].ft)
-		return tree[lef(p)].ft+tree[rig(p)].sd;
-	int mid=(tl+tr)/2;
-	return max(walk(lef(p),))
-}
 
 void update(int p,int l,int r,int tl,int tr){
 	if(l>r)
 		return;
-	push(p);
+	push(p,tl,tr);
 	if(tl==l && tr==r){
-		swap(tree[p].ft,tree[p].sd);
-		lazy[p]=1;
+		suap(tree[p]);
+		if(tl!=tr)lazy[p]=1;
+	}else{
+		int mid=(tl+tr)/2;
+		update(lef(p),l,min(mid,r),tl,mid);
+		update(rig(p),max(mid+1,l),r,mid+1,tr);
+		tree[p]=f(tree[lef(p)],tree[rig(p)]);
 	}
-	int mid=(tl+tr)/2;
-	update(lef(p),l,min(mid,r),tl,mid);
-	update(rig(p),max(mid+1,l),r,mid+1,tr);
-	tree[p]=tree[lef(p)]+tree[rig(p)];
+	
 }
 
-
+Dado query(int p,int l,int r,int tl,int tr){
+	if(l>r)
+		return dado();
+	push(p,tl,tr);
+	if(tl==l && tr==r)
+		return tree[p];
+	int mid=(tl+tr)/2;
+	return f(query(lef(p),l,min(mid,r),tl,mid),query(rig(p),max(l,mid+1),r,mid+1,tr));
+}
 
 
 int main(){
 	ios::sync_with_stdio(false);
 	cin.tie(NULL);
-
+	int n,q;
+	string s;
+	cin>>n>>q;
+	cin>>s;
+	for (int i = 0; i < n; ++i)
+	{
+		a[i+1]=dado((s[i]=='4'?1:0));
+		// cout<<((s[i]=='4')?1:0)<<endl;
+	}
+	build(1,1,n);
+	// cout<<tree[1].qs<<"\n";
+	while(q--){
+		cin>>s;
+		int l,r;
+		if(s[0]=='c'){
+			cout<<query(1,1,n,1,n).qs<<"\n";
+		}else{
+			cin>>l>>r;
+			update(1,l,r,1,n);
+		}
+	}
 	return 0;
 }
