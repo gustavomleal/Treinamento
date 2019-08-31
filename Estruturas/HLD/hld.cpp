@@ -51,20 +51,23 @@ int hldquery(int a, int b) {
     while(head[a] != head[b])  {
         if (depth[head[a]] > depth[head[b]])
             swap(a, b);
-        if(head[b]!=b){
-        	int cur = query(1,pos[head[b]]+1, pos[b],1,cur_pos);
+        //if(head[b]!=b){
+        	//
+        	//int cur = query(1,pos[head[b]]+1, pos[b],1,cur_pos);
+        	int cur = query(1,pos[head[b]], pos[b],1,cur_pos);
         	res =max(cur,res);
-    	}
+    	//}
     	// Para quando o peso é na aresta
     	// res=max(res,mat[parent[head[b]]][head[b]]);
     	b = parent[head[b]];
     }
     if (depth[a] > depth[b])
         swap(a, b);
-    if(a!=b){
-    	int last = query(1,pos[a]+1, pos[b],1,cur_pos);
+    //if(a!=b){
+    	//int last = query(1,pos[a]+1, pos[b],1,cur_pos);
+    	int last = query(1,pos[a], pos[b],1,cur_pos);
     	res =max(last,res);
-    }
+    //}
     return res;
 }
 
